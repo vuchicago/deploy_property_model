@@ -7,6 +7,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 import xgboost as xgb
 import pyarrow as pa
+from enum import Enum
+
+
 
 
 
@@ -31,12 +34,36 @@ havu_credit2022=pd.read_csv('2022 Havu CC.CSV')
 print(havu_debit2021['Posting Date'].min(),havu_debit2021['Posting Date'].max())
 #%%
 
-havu_credit2021['Category'].fillna("Unknown", inplace=True)
+havu_credit2021.fillna({'Category':"Unknown"}, inplace=True)
 havu_credit2021['Descriptions_all']=havu_credit2021['Category'] + ' ' + havu_credit2021['Description']+ ' ' + havu_credit2021['Type']
 havu_credit2022['Descriptions_all'] = havu_credit2022['Category'] +' ' +  havu_credit2022['Description'] + ' ' +  havu_credit2022['Type']
 
 vectorizer = TfidfVectorizer()
+#%%
+class FileType(Enum): #inherit Enum to make tuple fixed type
+    csv = 'csv'
+    parquet = 'parquet'
+    pickle = 'pickle'
+    shp = 'shp'
+    json = 'json'
+    xlsx ='xlsx'
+class chase_debit_read:
+        def __init__(self, file_type:FileType):
+               self.type=file_type
+               
+        def read(self,file_input):
+                if self.type==FileType.csv:
+                        self.df=pd.read_csv(file_input,index_col=False)
+                elif self.type==FileType.xlsx:
+                        self.df=pd.read_excel(file_input)
+                self.df['Amount']=pd.to_numeric(self.df['Amount'])
+                self.df['Descriptions_all']=self.df['Description']+' '+self.df['Details']+' '+self.df['Type']
+                return self.df
 
+#%%                        
+df_file=chase_debit_read(FileType.csv)         
+df=df_file.read('2023_debit.CSV')     
+               
 
 
 #%%
@@ -79,7 +106,7 @@ def df_property_label():
         df_train = pd.DataFrame(X_train.todense()) ##sparse matrix.  Needs to convert to dense matrix to dataframe it
         df_val = pd.DataFrame(X_val.todense())
         df_test=pd.DataFrame(X_pred.todense())
-        return df_train,pd.DataFrame(y_train), df_val, pd.DataFrame(y_val)
+        return df_train,pd.DataFrame(y_train), df_val, pd.DataFrame(y_val),vectorizer()
 
 #%%
 
