@@ -1,5 +1,6 @@
 #%%
 import pandas as pd
+import numpy as np
 import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -8,6 +9,7 @@ from sklearn.metrics import classification_report, accuracy_score
 import xgboost as xgb
 import pyarrow as pa
 from enum import Enum
+import pickle
 
 
 
@@ -47,116 +49,69 @@ class FileType(Enum): #inherit Enum to make tuple fixed type
     shp = 'shp'
     json = 'json'
     xlsx ='xlsx'
-class chase_debit_read:
-        def __init__(self, file_type:FileType):
+
+class TypeCC(Enum):
+        credit='credit'
+        debit='debit'
+        
+class ChaseExpenseRead:
+        def __init__(self, file_type:FileType,money_type:TypeCC):
                self.type=file_type
-               
+               self.money=money_type
         def read(self,file_input):
-                if self.type==FileType.csv:
+                self.df=pd.DataFrame([0])
+                if self.type==FileType.csv and (self.money==TypeCC.credit):
                         self.df=pd.read_csv(file_input,index_col=False)
-                elif self.type==FileType.xlsx:
+                        self.df[['Description','Category','Type']]=self.df[['Description','Category','Type']].replace(np.nan,"")
+                        self.df['Descriptions_all']=self.df['Description'] + ' ' + self.df['Category']+ ' ' + self.df['Type']
+                elif self.type==FileType.csv and (self.money==TypeCC.debit):
+                        self.df=pd.read_csv(file_input,index_col=False)
+                        self.df[['Description','Details','Type']]=self.df[['Description','Details','Type']].replace(np.nan,"")
+                        self.df['Descriptions_all']=self.df['Description']+' '+self.df['Details']+' '+self.df['Type']
+                elif self.type==FileType.xlsx and (self.money==TypeCC.credit):
                         self.df=pd.read_excel(file_input)
+                        self.df[['Description','Category','Type']]=self.df[['Description','Category','Type']].replace(np.nan,"")
+                        self.df['Descriptions_all']=self.df['Description'] + ' ' + self.df['Category']+ ' ' + self.df['Type']
+                elif self.type==FileType.xlsx and (self.money==TypeCC.debit):
+                        self.df=pd.read_excel(file_input)
+                        self.df[['Description','Details','Type']]=self.df[['Description','Details','Type']].replace(np.nan,"")
+                        self.df['Descriptions_all']=self.df['Description']+' '+self.df['Details']+' '+self.df['Type']
                 self.df['Amount']=pd.to_numeric(self.df['Amount'])
-                self.df['Descriptions_all']=self.df['Description']+' '+self.df['Details']+' '+self.df['Type']
+                
                 return self.df
+        @classmethod
+        def convert_credit(cls, df_input:pd.DataFrame) -> pd.DataFrame:
+                df_input[['Description','Category','Type']]=df_input[['Description','Category','Type']].replace(np.nan,"")
+                return df_input['Description'] +df_input['Category']+df_input['Type']
+        def convert_debit(cls, df_input:pd.DataFrame) -> pd.DataFrame:
+                df_input[['Description','Details','Type']]=df_input[['Description','Details','Type']].replace(np.nan,"")
+                return df_input['Description'] +df_input['Details']+df_input['Type']
+        
 
 #%%                        
-df_file=chase_debit_read(FileType.csv)         
-df=df_file.read('2023_debit.CSV')     
-               
 
-
-#%%
-# Assume the 'text' column has the text data and 'label' column has the property labels
-##
-def df_property_label():
-        X = havu_credit2021[['Descriptions_all','Amount']]
-        y = havu_credit2021['Property']
-
-        # Split the data into training and test sets
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=11)
-
-        # Fit the vectorizer on the training set
-        vectorizer.fit(X_train['Descriptions_all'])
-
-        # Transform both the test set and the prediction set using the same vectorizer
-        X_train_vec = vectorizer.transform(X_train['Descriptions_all'])
-        X_val_vec = vectorizer.transform(X_val['Descriptions_all'])
-
-        # Ensure the 'Amount' column is of numeric data type
-        X_train['Amount'] = X_train['Amount'].astype('float64')
-        X_val['Amount'] = X_val['Amount'].astype('float64')
-
-        # Stack the 'Amount' column with the text features
-        X_train = hstack([X_train_vec,X_train['Amount'].values.reshape(-1, 1)])
-        X_val = hstack([X_val_vec,X_val['Amount'].values.reshape(-1, 1)])
         
-        havu_credit2022['Category'].fillna("Unknown", inplace=True)
-
-        # Create a new DataFrame 'df' with 'Descriptions_all' and 'Amount' columns and drop NaN values
-        df = havu_credit2022[['Descriptions_all', 'Amount']]
-        df.dropna(inplace=True)
-
-        X_pred_vec = vectorizer.transform(df['Descriptions_all'])
-
-        # Use 'Amount' column from 'df' after dropping NaN values
-        X_pred = hstack([X_pred_vec, df['Amount'].values.reshape(-1, 1)])
-        csr_matrix = X_train.tocsr()
-        # Now convert to DataFrame
-        df_train = pd.DataFrame(X_train.todense()) ##sparse matrix.  Needs to convert to dense matrix to dataframe it
-        df_val = pd.DataFrame(X_val.todense())
-        df_test=pd.DataFrame(X_pred.todense())
-        return df_train,pd.DataFrame(y_train), df_val, pd.DataFrame(y_val),vectorizer()
 
 #%%
+def save_data_and_models():
+    X_train_prop, y_train_prop, X_val_prop, y_val_prop, vectorizer_prop = df_property_label()
+    X_train_label, y_train_label, X_val_label, y_val_label, vectorizer_label = df_expense_label()
+    dir_output = os.path.join(data_path, 'train/intermediate')
+    os.makedirs(dir_output, exist_ok=True)  # Ensure the directory exists
+    os.chdir(dir_output)
+    X_train_prop.to_parquet('X_train_prop.parquet')
+    X_val_prop.to_parquet('X_val_prop.parquet')
+    y_train_prop.to_parquet('y_train_prop.parquet')
+    y_val_prop.to_parquet('y_val_prop.parquet')
+    X_train_label.to_parquet('X_train_label.parquet')
+    X_val_label.to_parquet('X_val_label.parquet')
+    y_train_label.to_parquet('y_train_label.parquet')
+    y_val_label.to_parquet('y_val_label.parquet')
+    pickle.dump(vectorizer_prop, open("vectorizer_prop.pickle", "wb"))
+    pickle.dump(vectorizer_label, open("vectorizer_label.pickle", "wb"))
 
-# %%
-
-
-def df_expense_label():
-        havu_debit2021['Property'][havu_debit2021['Property']=='laramie']='Laramie'
-        havu_debit2021['Property'][havu_debit2021['Property']=='Anthony']='Laramie'
-        havu_debit2021['Amount']=pd.to_numeric(havu_debit2021['Amount'])
-
-        # Load your CSV file
-        havu_debit2021['Descriptions_all']=havu_debit2021['Description']+' '+havu_debit2021['Details']+' '+havu_debit2021['Type']
-        havu_debit2022['Descriptions_all']=havu_debit2022['Description']+' '+havu_debit2022['Details']+' '+havu_debit2022['Type']
-
-        df = havu_credit2022[['Descriptions_all', 'Amount']]
-        df.dropna(inplace=True)
-
-        X = havu_debit2021['Descriptions_all']
-        y = havu_debit2021['Label']
-
-        # Split the data into training and test sets
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
-
-        # Vectorize the text data using TF-IDF
-        vectorizer = TfidfVectorizer()
-        X_train_vec = vectorizer.fit_transform(X_train)
-        X_test_vec = vectorizer.transform(X_test)
-        X_pred_vec = vectorizer.transform(df['Descriptions_all'])
-        X_pred = hstack([X_pred_vec, df['Amount'].values.reshape(-1, 1)])
-        df_train=pd.DataFrame(X_train_vec.todense())
-        df_test=pd.DataFrame(X_test_vec.todense())
-        
-        return df_train , pd.DataFrame(y_train), df_test, pd.DataFrame(y_test)
-#%%
-if __name__== '__main__':
-        X_train_prop, y_train_prop, X_val_prop, y_val_prop=df_property_label()
-        X_train_label,y_train_label,X_val_label,y_val_label=df_expense_label()
-        dir_output=os.path.join(data_path,'train/intermediate')
-        os.chdir(dir_output)
-        X_train_prop.to_parquet('X_train_prop.parquet')
-        X_val_prop.to_parquet('X_val_prop.parquet')
-        y_train_prop.to_parquet('y_train_prop.parquet')
-        y_val_prop.to_parquet('y_val_prop.parquet')
-        X_train_label.to_parquet('X_train_label.parquet')
-        X_val_label.to_parquet('X_val_label.parquet')
-        y_train_label.to_parquet('y_train_label.parquet')
-        y_val_label.to_parquet('y_val_label.parquet')
-
-
+if __name__=='__main__':
+        save_data_and_models()
 
 # %%
 ###Output the datasets to the next step
