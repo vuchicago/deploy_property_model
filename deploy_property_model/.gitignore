@@ -1,7 +1,9 @@
 # Ignore specific file types
 *.parquet
 *.csv
+*.CSV
 *.xlsx
-
+*.pickle
 # Ignore a directory called "old"
 old_code/
+        
