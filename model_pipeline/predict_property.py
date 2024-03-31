@@ -1,6 +1,7 @@
 #%%
 import os
 import pandas as pd
+import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -40,19 +41,15 @@ havu_debit2023=debit_csv_container.read(debit2023)
 credit2022='havu_credit_2022_fixed.xlsx'
 credit2023='2023_credit.CSV'
 havu_credit2021=pd.read_excel('HaVu Taxes 2021.xlsx',sheet_name='Credit')
-havu_credit2021['Descriptions_all']=havu_credit2021['Category'] + ' ' + havu_credit2021['Description']+ ' ' + havu_credit2021['Type']
-havu_credit2021['Descriptions_all']=ChaseExpenseRead.convert_xls(havu_credit2021)
+#havu_credit2021['Descriptions_all']=havu_credit2021['Category'] + ' ' + havu_credit2021['Description']+ ' ' + havu_credit2021['Type']
+havu_credit2021['Descriptions_all']=ChaseExpenseRead.convert_credit(havu_credit2021)
 havu_credit2022=credit_xlsx_container.read(credit2022)
+#%%
 havu_credit2023=credit_csv_container.read(credit2023)
+havu_credit2023
+
 
 #%%
-
-
-#%%
-
-
-
-
         
 havu_debit2021['Property'][havu_debit2021['Property']=='laramie']='Laramie'
 havu_debit2021['Property'][havu_debit2021['Property']=='Anthony']='Laramie'
@@ -98,48 +95,52 @@ vectorizer=TfidfVectorizer()
 df_train_vec=vectorizer.fit_transform(df_prop_debit['Descriptions_all'])
 X_pred_vec = vectorizer.transform(havu_debit2023['Descriptions_all'])
 model_property_debit.fit(df_train_vec, y)
-df_property_debit2023=model_property_debit.predict(X_pred_vec) ##Property predictions from debit
+df_property_debit2023_pred=model_property_debit.predict(X_pred_vec) ##Property predictions from debit
 
 
 
 ########################Property Predictions for Credit
 ###############################################################
 #%%
-col_label=['Descriptions_all','Amount','Property']
-df_prop_cc=pd.concat([havu_credit2021[col_label],havu_credit2022[col_label]])
-X_train, X_test, y_train, y_test = train_test_split(df_prop_cc['Descriptions_all'], y, test_size=0.2, random_state=1)
+col_prop=['Descriptions_all','Amount','Property']
+df_prop_cc=pd.concat([havu_credit2021[col_prop],havu_credit2022[col_prop]])
+X_train, X_test, y_train, y_test = train_test_split(df_prop_cc[['Descriptions_all','Amount']], df_prop_cc['Property'], test_size=0.2, random_state=19)
+
 model_property_credit = LogisticRegression()
 vectorizer=TfidfVectorizer()
-df_train_vec=vectorizer.fit_transform(df_prop_debit['Descriptions_all'])
+X_train_vec=vectorizer.fit_transform(X_train['Descriptions_all'])
+X_test_vec=vectorizer.transform(X_test['Descriptions_all'])
+
+
+#X_train_vec=hstack([X_train_vec, X_train['Amount'].values.reshape(-1, 1)])
+#X_test_vec=hstack([X_test_vec, X_test['Amount'].values.reshape(-1, 1)])
+model_property_credit.fit(X_train_vec,y_train)
+
+y_pred=model_property_credit.predict(X_test_vec)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
 
 #%%
-#%%
-#%%
-os.chdir(data_path)
-df_read=ChaseExpenseRead(FileType.csv)
-X_pred=df_read.read('2023_debit.CSV')
-X_pred['Descriptions_all']=X_pred['Description']+' '+X_pred['Details']+' '+X_pred['Type']
-X_pred_vec=vectorizer.transform(X_pred['Descriptions_all'])
-X_pred=pd.DataFrame(X_pred_vec.todense())
 
-#%%
-
-X_train_full=pd.concat([X_train,X_val],axis=0)
-y_train_full=pd.concat([y_train,y_val],axis=0)
-
-#%%
-# Train the Logistic Regression model
+###Fit model on entire dataset
 model_property_credit = LogisticRegression()
-model_property_credit.fit(X_train_full, y_train_full)
+vectorizer=TfidfVectorizer()
+df_train_vec=vectorizer.fit_transform(df_prop_cc['Descriptions_all'])
+y=df_prop_cc['Property']
+X_pred_vec = vectorizer.transform(havu_credit2023['Descriptions_all'])
 
-# Make predictions on the test set
-y_pred = model_property_credit.predict(X_pred)
+model_property_credit.fit(df_train_vec, y)
+df_property_credit2023_pred=model_property_credit.predict(X_pred_vec) ##Property predictions from debit
 
+
+#%%
+pd.DataFrame(df_property_credit2023_pred).to_csv('df_prop_pred_credit',index=False)
+pd.DataFrame(df_property_debit2023_pred).to_csv('df_prop_pred_debit',index=False)
+
+pickle.dump(df_property_debit2023_pred, open("property_pred_debit.pickle", "wb"))
+pickle.dump(df_property_credit2023_pred, open("property_pred_credit.pickle", "wb"))
 
 
 #%%
-# Evaluate the model
-print("Accuracy:", accuracy_score(y_val, y_pred))
-print("\nClassification Report:\n", classification_report(y_val, y_pred))
 
-#%%
