@@ -3,7 +3,7 @@ import os
 import pickle
 from pydantic import BaseModel
 from typing import Any
-os.chdir(r'/Users/vuchicago/Python/deploy_property_model/model_pipeline/data/train')
+os.chdir('./model_outputs/')
 
 #%%
 with open("vectorizer_prop_credit.pickle", "rb") as f:
@@ -31,7 +31,7 @@ class PropertyPredict(BaseModel):
         def predict(self,text_input:TextInput):
                 input=self.vectorizer.transform([text_input.text_input])
                 output=self.model.predict(input)
-                output_prob=max(self.model.predict_proba(input))
+                output_prob=self.model.predict_proba(input).max()
                 return output,output_prob
 
 
@@ -56,5 +56,6 @@ def prediction_prop_credit(Description):
 
 
 # %%
-prediction_prop_credit('Laramie')
+a,b=prediction_prop_credit('Laramie')
 # %%
+
