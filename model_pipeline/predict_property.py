@@ -51,8 +51,8 @@ havu_credit2023
 
 #%%
         
-havu_debit2021['Property'][havu_debit2021['Property']=='laramie']='Laramie'
-havu_debit2021['Property'][havu_debit2021['Property']=='Anthony']='Laramie'
+havu_debit2021['Property'].loc[havu_debit2021['Property']=='laramie']='Laramie'
+havu_debit2021['Property'].loc[havu_debit2021['Property']=='Anthony']='Laramie'
 
 
 col_keep=['Descriptions_all','Amount','Property','Label']
@@ -91,9 +91,9 @@ print("\nClassification Report:\n", classification_report(y_test, y_pred))
 #%%
 ###Fit model on entire dataset
 model_property_debit = LogisticRegression()
-vectorizer=TfidfVectorizer()
-df_train_vec=vectorizer.fit_transform(df_prop_debit['Descriptions_all'])
-X_pred_vec = vectorizer.transform(havu_debit2023['Descriptions_all'])
+vectorizer_debit=TfidfVectorizer()
+df_train_vec=vectorizer_debit.fit_transform(df_prop_debit['Descriptions_all'])
+X_pred_vec = vectorizer_debit.transform(havu_debit2023['Descriptions_all'])
 model_property_debit.fit(df_train_vec, y)
 df_property_debit2023_pred=model_property_debit.predict(X_pred_vec) ##Property predictions from debit
 
@@ -125,22 +125,46 @@ print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
 ###Fit model on entire dataset
 model_property_credit = LogisticRegression()
-vectorizer=TfidfVectorizer()
-df_train_vec=vectorizer.fit_transform(df_prop_cc['Descriptions_all'])
+vectorizer_credit=TfidfVectorizer()
+df_train_vec=vectorizer_credit.fit_transform(df_prop_cc['Descriptions_all'])
 y=df_prop_cc['Property']
-X_pred_vec = vectorizer.transform(havu_credit2023['Descriptions_all'])
+X_pred_vec = vectorizer_credit.transform(havu_credit2023['Descriptions_all'])
 
 model_property_credit.fit(df_train_vec, y)
 df_property_credit2023_pred=model_property_credit.predict(X_pred_vec) ##Property predictions from debit
 
 
 #%%
-pd.DataFrame(df_property_credit2023_pred).to_csv('df_prop_pred_credit',index=False)
-pd.DataFrame(df_property_debit2023_pred).to_csv('df_prop_pred_debit',index=False)
+pd.DataFrame(df_property_credit2023_pred).to_csv('df_prop_pred_credit.csv',index=False)
+pd.DataFrame(df_property_debit2023_pred).to_csv('df_prop_pred_debit.csv',index=False)
 
-pickle.dump(df_property_debit2023_pred, open("property_pred_debit.pickle", "wb"))
-pickle.dump(df_property_credit2023_pred, open("property_pred_credit.pickle", "wb"))
+pickle.dump(model_property_debit, open("property_pred_debit.pickle", "wb"))
+pickle.dump(model_property_credit, open("property_pred_credit.pickle", "wb"))
+pickle.dump(vectorizer_debit, open("vectorizer_prop_debit.pickle", "wb"))
+pickle.dump(vectorizer_credit, open("vectorizer_prop_credit.pickle", "wb"))
+
+#%%
+from pydantic import BaseModel
+from typing import Any
+
+class TextInput(BaseModel):
+        text_input: str
 
 
 #%%
+class PropertyPredict(BaseModel):
+        vectorizer: Any #Model.logistic  # Specify the type based on your actual vectorizer class, using Any for now as a placeholder
+        model: Any       # Similarly, specify the type according to your model class
+        
+        def predict(self,text_input:TextInput):
+                input=self.vectorizer.transform([text_input.text_input])
+                output=self.model.predict(input)
+                return output
 
+#%%
+
+
+
+
+
+#%%
