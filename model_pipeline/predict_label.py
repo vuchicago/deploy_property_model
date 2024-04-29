@@ -136,9 +136,10 @@ model_label_credit.fit(df_train_vec, y)
 df_label_credit2023_pred=model_label_credit.predict(X_pred_vec) ##Label predictions from debit
 
 
+
 #%%
-pd.DataFrame(df_label_credit2023_pred).to_csv('df_label_pred_credit',index=False)
-pd.DataFrame(df_label_debit2023_pred).to_csv('df_label_pred_debit',index=False)
+pd.DataFrame(df_label_credit2023_pred).to_csv('df_label_pred_credit.csv',index=False)
+pd.DataFrame(df_label_debit2023_pred).to_csv('df_label_pred_debit.csv',index=False)
 
 pickle.dump(df_label_debit2023_pred, open("label_pred_debit.pickle", "wb"))
 pickle.dump(df_label_credit2023_pred, open("label_pred_credit.pickle", "wb"))
