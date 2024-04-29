@@ -89,7 +89,12 @@ class ChaseExpenseRead:
         
 
 #%%                        
+### Add in one vectorizer for all
+def create_vectorizer(df_input, **kwargs: pd.DataFrame) -> TfidfVectorizer:
+        pass
 
+        
+        
         
 
 #%%
