@@ -6,9 +6,6 @@ class Debit(BaseModel):
     Description_all: str
 
 
-class RecipeSearchResults(BaseModel):
-    results: Sequence[Recipe]
-
 
 class RecipeCreate(BaseModel):
     label: str
