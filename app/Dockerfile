@@ -1,7 +1,7 @@
 # Use an official Python runtime as a base image
 ##make sure you're in the directory with the Dickerfile
 # 1) docker build -t property_predict .
-# 2) docker run -d -p 3100:3100 property_predict
+# 2) docker run -d -p 8000:8000 property_predict
 FROM python:3.11.4
 
 # Set the working directory in the container
@@ -20,4 +20,4 @@ EXPOSE 8000
 ENV NAME property_prediction
 
 # Run app.py when the container launches
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
