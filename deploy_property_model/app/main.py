@@ -35,5 +35,6 @@ async def predict_property_debit(description: Description):
 
 # %%
 
-predict_property_cc("hello keon")
+if __name__ == '__main__':
+    uvicorn.run('main:app', host='0.0.0.0', port=8000)
 # %%
