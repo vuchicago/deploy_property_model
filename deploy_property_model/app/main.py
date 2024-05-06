@@ -21,7 +21,7 @@ class Description(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "main page"}
+    return {"message": "HaVu Investment Group Property Predictions Page"}
 
 @app.post("/predict_property_credit")
 async def predict_property_cc(description: Description):

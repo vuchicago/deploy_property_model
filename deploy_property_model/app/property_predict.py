@@ -52,10 +52,5 @@ def prediction_prop_credit(Description):
 
 
         
-        
-
-
-# %%
-a,b=prediction_prop_credit('Laramie')
-# %%
+    
 
