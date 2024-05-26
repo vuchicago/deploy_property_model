@@ -6,4 +6,4 @@
 *.pickle
 # Ignore a directory called "old"
 old_code/
-        
+./venv/
