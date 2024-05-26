@@ -6,6 +6,13 @@
 *.pickle
 # Ignore a directory called "old"
 old_code/
+<<<<<<< HEAD
 ./venv/
 *.pyc
 /venv
+=======
+./model_pipeline/data/train/
+venv
+*.pyc
+        
+>>>>>>> Development
