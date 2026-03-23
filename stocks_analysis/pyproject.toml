@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stocks-analysis"
+version = "0.1.0"
+description = "Simple stock backtesting utilities."
+requires-python = ">=3.11"
+dependencies = [
+  "matplotlib>=3.9",
+  "pandas>=2.2",
+  "yfinance>=0.2.54",
+]
+
+[project.scripts]
+stock-backtest = "stocks_analysis.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stocks_analysis"]
