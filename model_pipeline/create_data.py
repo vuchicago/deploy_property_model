@@ -26,21 +26,21 @@ data_path=os.path.join(dir,'data')
 data_train_path=os.path.join(data_path,'train')
 os.chdir(data_train_path)
 #%%
-havu_debit2021=pd.read_excel('HaVu Taxes 2021.xlsx',sheet_name='Debit')
+# havu_debit2021=pd.read_excel('HaVu Taxes 2021.xlsx',sheet_name='Debit')
 
-havu_credit2021=pd.read_excel('HaVu Taxes 2021.xlsx',sheet_name='Credit')
+# havu_credit2021=pd.read_excel('HaVu Taxes 2021.xlsx',sheet_name='Credit')
 
-havu_debit2022=pd.read_csv('2022_debit.csv')
-havu_credit2022=pd.read_csv('2022 Havu CC.CSV')
+# havu_debit2022=pd.read_csv('2022_debit.csv')
+# havu_credit2022=pd.read_csv('2022 Havu CC.CSV')
 
-print(havu_debit2021['Posting Date'].min(),havu_debit2021['Posting Date'].max())
-#%%
+# print(havu_debit2021['Posting Date'].min(),havu_debit2021['Posting Date'].max())
+# #%%
 
-havu_credit2021.fillna({'Category':"Unknown"}, inplace=True)
-havu_credit2021['Descriptions_all']=havu_credit2021['Category'] + ' ' + havu_credit2021['Description']+ ' ' + havu_credit2021['Type']
-havu_credit2022['Descriptions_all'] = havu_credit2022['Category'] +' ' +  havu_credit2022['Description'] + ' ' +  havu_credit2022['Type']
+# havu_credit2021.fillna({'Category':"Unknown"}, inplace=True)
+# havu_credit2021['Descriptions_all']=havu_credit2021['Category'] + ' ' + havu_credit2021['Description']+ ' ' + havu_credit2021['Type']
+# havu_credit2022['Descriptions_all'] = havu_credit2022['Category'] +' ' +  havu_credit2022['Description'] + ' ' +  havu_credit2022['Type']
 
-vectorizer = TfidfVectorizer()
+# vectorizer = TfidfVectorizer()
 #%%
 class FileType(Enum): #inherit Enum to make tuple fixed type
     csv = 'csv'

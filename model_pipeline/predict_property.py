@@ -164,7 +164,3 @@ class PropertyPredict(BaseModel):
 #%%
 
 
-
-
-
-#%%
